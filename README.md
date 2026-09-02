@@ -224,6 +224,33 @@ A visualização permite acompanhar as dependências entre os modelos e compreen
 
 ## Como Executar o Projeto
 
+### Pré-requisitos
+
+Antes de executar o pipeline, é necessário ter:
+
+- Python 3 instalado;
+- acesso a um banco PostgreSQL;
+- as tabelas de origem utilizadas pela camada Bronze;
+- Git instalado.
+
+A camada Bronze realiza a leitura dos dados diretamente do PostgreSQL através da conexão `pg_origem`.
+
+### Tabelas de origem
+
+O banco PostgreSQL deve possuir, no schema `public`, as seguintes tabelas:
+
+| Tabela | Utilização |
+|---|---|
+| `estados` | Dados dos estados |
+| `cidades` | Dados das cidades |
+| `clientes` | Dados dos clientes |
+| `concessionarias` | Dados das concessionárias |
+| `veiculos` | Dados dos veículos |
+| `vendas` | Dados das vendas |
+| `vendedores` | Dados dos vendedores |
+
+Os modelos Bronze acessam essas tabelas através da conexão PostgreSQL configurada como `pg_origem`.
+
 ### 1. Clonar o repositório
 
 ```bash
