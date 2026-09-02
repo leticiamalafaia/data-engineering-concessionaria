@@ -1,4 +1,4 @@
-{% test must_be_emplty(model) %}
+{% test must_be_empty(model) %}
     select * 
     from {{ model }}
 {% endtest %}

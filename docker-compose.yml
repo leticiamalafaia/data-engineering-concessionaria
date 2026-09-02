@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: concessionaria-postgres
+    environment:
+      POSTGRES_DB: concessionaria
+      POSTGRES_USER: leticia
+      POSTGRES_PASSWORD: leticia_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  postgres_data:
