@@ -1,0 +1,15 @@
+exposures:
+  - name: dashboard_resumo_mensal
+    label: "Dashboard Resumo Mensal — Diretoria"
+    type: dashboard
+    maturity: medium
+    url: https://bi.novadrivermotors.com/dashboards/resumo-mensal
+    description: >
+      Dashboard usado pela Diretoria Comercial na reunião mensal, mostrando
+      receita, crescimento e destaques (veículo mais vendido, vendedor de
+      maior receita) do mês.
+    depends_on:
+      - ref('mart_resumo_mensal')
+    owner:
+      name: Diretoria Comercial
+      email: diretoria@novadrivermotors.com

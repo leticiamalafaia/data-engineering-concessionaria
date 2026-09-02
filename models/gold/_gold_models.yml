@@ -1,0 +1,168 @@
+version: 2
+
+models:
+  - name: dim_estado
+    description: Dimensão de estados, uma linha por id_estados. Sem histórico (sem SCD Type 2).
+    columns:
+      - name: sk_estado
+        tests: [unique, not_null]
+      - name: id_estados
+        tests: [unique, not_null]
+
+  - name: dim_cidade
+    description: Dimensão de cidades, denormalizada com atributos do estado.
+    columns:
+      - name: sk_cidade
+        tests: [unique, not_null]
+      - name: id_cidades
+        tests: [unique, not_null]
+
+  - name: dim_concessionaria
+    description: Dimensão de concessionárias, denormalizada com cidade/estado/região.
+    columns:
+      - name: sk_concessionaria
+        tests: [unique, not_null]
+      - name: id_concessionarias
+        tests: [unique, not_null]
+
+  - name: dim_cliente
+    description: Dimensão de clientes, denormalizada com o nome da concessionária.
+    columns:
+      - name: sk_cliente
+        tests: [unique, not_null]
+      - name: id_clientes
+        tests: [unique, not_null]
+
+  - name: dim_vendedor
+    description: Dimensão de vendedores, denormalizada com o nome da concessionária.
+    columns:
+      - name: sk_vendedor
+        tests: [unique, not_null]
+      - name: id_vendedores
+        tests: [unique, not_null]
+
+  - name: dim_veiculo
+    description: Dimensão de veículos, com tipo padronizado e segmento comercial.
+    columns:
+      - name: sk_veiculo
+        tests: [unique, not_null]
+      - name: id_veiculos
+        tests: [unique, not_null]
+      - name: segmento_veiculo
+        tests:
+          - accepted_values:
+              values: ["Standard", "Premium", "Luxo"]
+              config:
+                where: "segmento_veiculo is not null"
+
+  - name: fct_vendas
+    description: >
+      Fato de vendas. Grão: uma linha por venda (id_vendas). Materialização
+      incremental (delete+insert).
+    columns:
+      - name: id_vendas
+        description: Grão do fato — uma linha por id_vendas.
+        tests: [unique, not_null]
+      - name: id_veiculos
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_veiculo')
+              field: id_veiculos
+      - name: id_vendedores
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_vendedor')
+              field: id_vendedores
+      - name: id_clientes
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_cliente')
+              field: id_clientes
+      - name: id_concessionarias
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_concessionaria')
+              field: id_concessionarias
+      - name: valor_pago
+        tests:
+          - not_null
+          - positive_value
+      - name: percentual_desconto
+        description: (valor_tabela - valor_pago) / valor_tabela. NULL quando valor_tabela é nulo/zero.
+        tests:
+          - accepted_range:
+              min_value: "{{ var('percentual_desconto_min') }}"
+              max_value: "{{ var('percentual_desconto_max') }}"
+              config:
+                where: "percentual_desconto is not null"
+      - name: classificacao_desconto
+        tests:
+          - accepted_values:
+              values: ["com_desconto", "sem_desconto", "com_acrescimo"]
+              config:
+                where: "classificacao_desconto is not null"
+
+  - name: mart_vendas_por_vendedor
+    description: Vendas agregadas por vendedor e mês.
+    columns:
+      - name: ano_mes
+        tests: [not_null]
+      - name: id_vendedores
+        tests: [not_null]
+      - name: receita_total
+        tests: [not_null]
+    #tests:
+    #  - dbt_utils.unique_combination_of_columns:
+    #      combination_of_columns: [ano_mes, id_vendedores]
+
+  - name: mart_vendas_por_concessionaria
+    description: Vendas agregadas por concessionária e mês.
+    columns:
+      - name: ano_mes
+        tests: [not_null]
+      - name: id_concessionarias
+        tests: [not_null]
+      - name: receita_total
+        tests: [not_null]
+      - name: participacao_receita
+        tests:
+          - accepted_range:
+              min_value: 0
+              max_value: 1.0001
+              config:
+                where: "participacao_receita is not null"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [ano_mes, id_concessionarias]
+
+  - name: mart_resumo_mensal
+    description: Resumo executivo consolidado por mês.
+    columns:
+      - name: ano_mes
+        tests: [unique, not_null]
+      - name: receita_total
+        tests: [not_null]
+  
+  - name: audit_vendas_sem_veiculo
+    description: Vendas cujo id_veiculos não existe em silver_veiculos.
+    tests:
+      - must_be_empty
+
+  - name: audit_vendas_sem_vendedor
+    description: Vendas cujo id_vendedores não existe em silver_vendedores.
+    tests:
+      - must_be_empty
+
+  - name: audit_vendas_sem_cliente
+    description: Vendas cujo id_clientes não existe em silver_clientes.
+    tests:
+      - must_be_empty
+
+  - name: audit_vendas_sem_concessionaria
+    description: Vendas cujo id_concessionarias não existe em silver_concessionarias.
+    tests:
+      - must_be_empty

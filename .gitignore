@@ -1,0 +1,31 @@
+]# Environment
+.env
+.env.*
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# dbt
+target/
+dbt_packages/
+logs/
+
+# DuckDB
+*.duckdb
+*.duckdb.wal
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Local dbt configuration
+profiles.yml
+.user.yml
+
+# DuckDB executable
+duckdb
